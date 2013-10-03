@@ -40,27 +40,27 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 	<mate:Listener type="{ShortcutEvent.MAXIMIZE_DOCK}" method="remoteMaximize" />
 	<mx:Script>
 		<![CDATA[ 
-	  import org.bigbluebutton.main.events.ShortcutEvent;
-      import com.asfusion.mate.events.Dispatcher;
-      
-      import mx.events.ChildExistenceChangedEvent;
-      
-      import org.bigbluebutton.common.Images;
-
-      import org.bigbluebutton.common.LogUtil;
-      import org.bigbluebutton.common.events.CloseWindowEvent;
-      import org.bigbluebutton.common.events.DragWindowEvent;
-      import org.bigbluebutton.common.events.OpenWindowEvent;
-      import org.bigbluebutton.core.BBB;
-      import org.bigbluebutton.core.events.ConnectAppEvent;
-      import org.bigbluebutton.main.model.users.Conference;
-      import org.bigbluebutton.main.views.MainCanvas;
-      import org.bigbluebutton.modules.videoconf.business.VideoWindowItf;
-      import org.bigbluebutton.modules.videoconf.events.OpenVideoWindowEvent;
-      import org.bigbluebutton.modules.videoconf.events.UserTalkingEvent;
-      import org.bigbluebutton.modules.videoconf.model.VideoConfOptions;
-      import org.bigbluebutton.util.i18n.ResourceUtil;
-	  import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import mx.events.ChildExistenceChangedEvent;
+			
+			import org.bigbluebutton.common.Images;
+			import org.bigbluebutton.common.LogUtil;
+			import org.bigbluebutton.common.events.CloseWindowEvent;
+			import org.bigbluebutton.common.events.DragWindowEvent;
+			import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import org.bigbluebutton.common.events.OpenWindowEvent;
+			import org.bigbluebutton.core.BBB;
+			import org.bigbluebutton.core.events.ConnectAppEvent;
+			import org.bigbluebutton.main.events.ShortcutEvent;
+			import org.bigbluebutton.main.model.users.Conference;
+			import org.bigbluebutton.main.views.MainCanvas;
+			import org.bigbluebutton.modules.videoconf.business.VideoWindowItf;
+			import org.bigbluebutton.modules.videoconf.events.OpenVideoWindowEvent;
+			import org.bigbluebutton.modules.videoconf.events.UserTalkingEvent;
+			import org.bigbluebutton.modules.videoconf.model.VideoConfOptions;
+			import org.bigbluebutton.modules.videoconf.views.VideoWindow;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
 			
 			private var childrenDimension:Dictionary = new Dictionary();
 			private var borderColor:String;
@@ -121,6 +121,17 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 		        var gDispatcher:Dispatcher = new Dispatcher();
 		        var evt:ConnectAppEvent = new ConnectAppEvent(ConnectAppEvent.CONNECT_VIDEO_APP);
 		        gDispatcher.dispatchEvent(evt);
+				
+				btnCloseAllVideos.addEventListener(MouseEvent.CLICK, onCloseAllVideos); 
+			}
+			
+			private function onCloseAllVideos (e:MouseEvent):void {
+				trace("close all videos");
+				
+				for each(var window:Object in mutableChildrenArray) {
+					if(window is VideoWindow)
+						(window as VideoWindow).close();
+				}
 			}
 			
 			private function remoteMinimize(e:ShortcutEvent):void{
@@ -238,15 +249,14 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			private function onCloseWindow(e:CloseWindowEvent):void {
 				// it should not just undock the window, it should close the window forever
 				if (isVideoWindow(e.window) && this.contains(e.window as VideoWindowItf)) {
-          this.removeChild(e.window as VideoWindowItf);
-        }
-					
+					this.removeChild(e.window as VideoWindowItf);
+				}
 			}
 			
 			private function onOpenWindow(e:OpenVideoWindowEvent):void {
 				if (isVideoWindow(e.window) && options.autoDock) {
-          addVideoChild(e.window as VideoWindowItf);
-        }					
+					addVideoChild(e.window as VideoWindowItf);
+				}					
 			}
 			
 			private function addVideoChild(window:VideoWindowItf):void {
@@ -279,9 +289,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			override public function close(event:MouseEvent = null):void {
-        for each(var windowItf:VideoWindowItf in mutableChildrenArray) {
-          windowItf.close();
-        }
+		        for each(var windowItf:VideoWindowItf in mutableChildrenArray) {
+		          windowItf.close();
+		        }
         
 				removeAllChildren();
 				super.close(event);
@@ -484,6 +494,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	
+	<mx:Button id="btnCloseAllVideos" />
 	<mate:Listener type="{OpenVideoWindowEvent.OPEN_VIDEO_WINDOW_EVENT}" method="onOpenWindow" />
 	<mate:Listener type="{CloseWindowEvent.CLOSE_WINDOW_EVENT}" method="onCloseWindow" />
 </MDIWindow>

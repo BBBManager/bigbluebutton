@@ -47,14 +47,11 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			import org.bigbluebutton.common.Images;
 			import org.bigbluebutton.common.LogUtil;
 			import org.bigbluebutton.common.events.CloseWindowEvent;
-			import org.bigbluebutton.common.events.DragWindowEvent;
 			import org.bigbluebutton.common.events.LocaleChangeEvent;
-			import org.bigbluebutton.common.events.OpenWindowEvent;
-			import org.bigbluebutton.core.BBB;
+			import org.bigbluebutton.common.events.ToolbarButtonEvent;
 			import org.bigbluebutton.core.events.ConnectAppEvent;
 			import org.bigbluebutton.main.events.ShortcutEvent;
-			import org.bigbluebutton.main.model.users.Conference;
-			import org.bigbluebutton.main.views.MainCanvas;
+			import org.bigbluebutton.modules.deskshare.view.components.ToolbarButton;
 			import org.bigbluebutton.modules.videoconf.business.VideoWindowItf;
 			import org.bigbluebutton.modules.videoconf.events.OpenVideoWindowEvent;
 			import org.bigbluebutton.modules.videoconf.events.UserTalkingEvent;
@@ -67,7 +64,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			private var minChildAspectRatio:Number;
 			// the mutable array is used to change the order of the dock children
 			private var mutableChildrenArray:Array = new Array();
-			
+						
 			private var _prioritizeWindow:Boolean = false;
 			private var priorityWindow:VideoWindowItf = null;
 			// the priority video will fit a portion of the dock that is represented by this weight
@@ -122,16 +119,8 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 		        var evt:ConnectAppEvent = new ConnectAppEvent(ConnectAppEvent.CONNECT_VIDEO_APP);
 		        gDispatcher.dispatchEvent(evt);
 				
-				btnCloseAllVideos.addEventListener(MouseEvent.CLICK, onCloseAllVideos); 
-			}
-			
-			private function onCloseAllVideos (e:MouseEvent):void {
-				trace("close all videos");
-				
-				for each(var window:Object in mutableChildrenArray) {
-					if(window is VideoWindow)
-						(window as VideoWindow).close();
-				}
+				//It uses a timeout to position the button to last, because the order of button is not used in toolbar component
+				setTimeout(setupCloseAllVideosButton, 1500);
 			}
 			
 			private function remoteMinimize(e:ShortcutEvent):void{
@@ -199,7 +188,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			
 			private function onChildAdd(e:ChildExistenceChangedEvent = null):void {
 				if (e != null) {
-					mutableChildrenArray.push(getChildren().pop());
+					var child:Object = getChildren().pop();
+					
+					mutableChildrenArray.push(child);
 					updateMinAspectRatio(mutableChildrenArray);
 				}
 				
@@ -211,8 +202,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			
 			private function onChildRemove(e:ChildExistenceChangedEvent = null):void {
 				var index:int = mutableChildrenArray.indexOf(e.relatedObject);
-				if (index != -1)
+				if (index != -1){
 					mutableChildrenArray.splice(index, 1);
+				}
 				
 				if (e.relatedObject == priorityWindow || mutableChildrenArray.length <= 1)
 					deprioritizeWindow();
@@ -489,12 +481,39 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 					maximizeRestoreBtn.accessibilityName = ResourceUtil.getInstance().getString('bbb.video.maximizeRestoreBtn.accessibilityName');
 					minimizeBtn.accessibilityName = ResourceUtil.getInstance().getString('bbb.video.minimizeBtn.accessibilityName');
 				}
-			}			
+			}
+			
+			private function setupCloseAllVideosButton():void {
+				if(options.enableCloseAllVideosButton == true) {
+					var button:CloseAllVideosButton = new CloseAllVideosButton();	   	
+					var event:ToolbarButtonEvent = new ToolbarButtonEvent(ToolbarButtonEvent.ADD);
+					event.button = button;
+					dispatcher.dispatchEvent(event);
+					
+					button.addEventListener(MouseEvent.CLICK, onCloseAllVideos);
+				}
+			}
+			
+			private function onCloseAllVideos (e:MouseEvent):void {
+				trace("close all videos");
+				
+				var videosToClose:Array = new Array();
+				
+				for each(var window:Object in mutableChildrenArray) {
+					if(window is VideoWindow)
+						videosToClose.push(window);
+				}
+				
+				videosToClose.forEach(function(element:*, index:int, arr:Array):void {
+					trace("closing window ");
+					(element as VideoWindow).close();
+				});
+				
+			}
 						
 		]]>
 	</mx:Script>
 	
-	<mx:Button id="btnCloseAllVideos" />
 	<mate:Listener type="{OpenVideoWindowEvent.OPEN_VIDEO_WINDOW_EVENT}" method="onOpenWindow" />
 	<mate:Listener type="{CloseWindowEvent.CLOSE_WINDOW_EVENT}" method="onCloseWindow" />
 </MDIWindow>

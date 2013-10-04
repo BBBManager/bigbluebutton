@@ -122,6 +122,7 @@
 			layout="smart"
 			oneAlwaysBigger="false"
 			baseTabIndex="401"
+			enableCloseAllVideosButton="true"
 		/>
 		
 		<module name="LayoutModule" url="http://HOST/client/LayoutModule.swf?v=VERSION"

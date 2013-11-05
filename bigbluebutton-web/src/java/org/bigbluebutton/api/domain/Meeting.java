@@ -34,7 +34,7 @@ public class Meeting {
 	private String name;
 	private String extMeetingId;
 	private String intMeetingId;	
-	private int duration = 0;	 
+	private long duration = 0;	 
 	private long createdTime = 0;
 	private long startTime = 0;
 	private long endTime = 0;

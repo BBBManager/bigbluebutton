@@ -35,7 +35,7 @@
 		/>
 
 		
-		<module name="DeskShareModule" 
+<!--		<module name="DeskShareModule" 
 			url="http://HOST/client/DeskShareModule.swf?v=4105" 
 			uri="rtmp://HOST/deskShare"
 			showButton="true"
@@ -43,6 +43,7 @@
 			autoFullScreen="false"
 			baseTabIndex="201"
 		/>
+-->
 		
 		<module name="PhoneModule" url="http://HOST/client/PhoneModule.swf?v=VERSION" 
 			uri="rtmp://HOST/sip" 

@@ -40,34 +40,31 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 	<mate:Listener type="{ShortcutEvent.MAXIMIZE_DOCK}" method="remoteMaximize" />
 	<mx:Script>
 		<![CDATA[ 
-	  import org.bigbluebutton.main.events.ShortcutEvent;
-      import com.asfusion.mate.events.Dispatcher;
-      
-      import mx.events.ChildExistenceChangedEvent;
-      
-      import org.bigbluebutton.common.Images;
-
-      import org.bigbluebutton.common.LogUtil;
-      import org.bigbluebutton.common.events.CloseWindowEvent;
-      import org.bigbluebutton.common.events.DragWindowEvent;
-      import org.bigbluebutton.common.events.OpenWindowEvent;
-      import org.bigbluebutton.core.BBB;
-      import org.bigbluebutton.core.events.ConnectAppEvent;
-      import org.bigbluebutton.main.model.users.Conference;
-      import org.bigbluebutton.main.views.MainCanvas;
-      import org.bigbluebutton.modules.videoconf.business.VideoWindowItf;
-      import org.bigbluebutton.modules.videoconf.events.OpenVideoWindowEvent;
-      import org.bigbluebutton.modules.videoconf.events.UserTalkingEvent;
-      import org.bigbluebutton.modules.videoconf.model.VideoConfOptions;
-      import org.bigbluebutton.util.i18n.ResourceUtil;
-	  import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import mx.events.ChildExistenceChangedEvent;
+			
+			import org.bigbluebutton.common.Images;
+			import org.bigbluebutton.common.LogUtil;
+			import org.bigbluebutton.common.events.CloseWindowEvent;
+			import org.bigbluebutton.common.events.LocaleChangeEvent;
+			import org.bigbluebutton.common.events.ToolbarButtonEvent;
+			import org.bigbluebutton.core.events.ConnectAppEvent;
+			import org.bigbluebutton.main.events.ShortcutEvent;
+			import org.bigbluebutton.modules.deskshare.view.components.ToolbarButton;
+			import org.bigbluebutton.modules.videoconf.business.VideoWindowItf;
+			import org.bigbluebutton.modules.videoconf.events.OpenVideoWindowEvent;
+			import org.bigbluebutton.modules.videoconf.events.UserTalkingEvent;
+			import org.bigbluebutton.modules.videoconf.model.VideoConfOptions;
+			import org.bigbluebutton.modules.videoconf.views.VideoWindow;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
 			
 			private var childrenDimension:Dictionary = new Dictionary();
 			private var borderColor:String;
 			private var minChildAspectRatio:Number;
 			// the mutable array is used to change the order of the dock children
 			private var mutableChildrenArray:Array = new Array();
-			
+						
 			private var _prioritizeWindow:Boolean = false;
 			private var priorityWindow:VideoWindowItf = null;
 			// the priority video will fit a portion of the dock that is represented by this weight
@@ -123,6 +120,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 		        var gDispatcher:Dispatcher = new Dispatcher();
 		        var evt:ConnectAppEvent = new ConnectAppEvent(ConnectAppEvent.CONNECT_VIDEO_APP);
 		        gDispatcher.dispatchEvent(evt);
+				
+				//It uses a timeout to position the button to last, because the order of button is not used in toolbar component
+				setTimeout(setupCloseAllVideosButton, 1500);
 			}
 			
 			private function remoteMinimize(e:ShortcutEvent):void{
@@ -190,7 +190,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			
 			private function onChildAdd(e:ChildExistenceChangedEvent = null):void {
 				if (e != null) {
-					mutableChildrenArray.push(getChildren().pop());
+					var child:Object = getChildren().pop();
+					
+					mutableChildrenArray.push(child);
 					updateMinAspectRatio(mutableChildrenArray);
 				}
 				
@@ -202,8 +204,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			
 			private function onChildRemove(e:ChildExistenceChangedEvent = null):void {
 				var index:int = mutableChildrenArray.indexOf(e.relatedObject);
-				if (index != -1)
+				if (index != -1){
 					mutableChildrenArray.splice(index, 1);
+				}
 				
 				if (e.relatedObject == priorityWindow || mutableChildrenArray.length <= 1)
 					deprioritizeWindow();
@@ -240,15 +243,14 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			private function onCloseWindow(e:CloseWindowEvent):void {
 				// it should not just undock the window, it should close the window forever
 				if (isVideoWindow(e.window) && this.contains(e.window as VideoWindowItf)) {
-          this.removeChild(e.window as VideoWindowItf);
-        }
-					
+					this.removeChild(e.window as VideoWindowItf);
+				}
 			}
 			
 			private function onOpenWindow(e:OpenVideoWindowEvent):void {
 				if (isVideoWindow(e.window) && options.autoDock) {
-          addVideoChild(e.window as VideoWindowItf);
-        }					
+					addVideoChild(e.window as VideoWindowItf);
+				}					
 			}
 			
 			private function addVideoChild(window:VideoWindowItf):void {
@@ -281,9 +283,9 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			override public function close(event:MouseEvent = null):void {
-        for each(var windowItf:VideoWindowItf in mutableChildrenArray) {
-          windowItf.close();
-        }
+		        for each(var windowItf:VideoWindowItf in mutableChildrenArray) {
+		          windowItf.close();
+		        }
         
 				removeAllChildren();
 				super.close(event);
@@ -481,7 +483,35 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 					maximizeRestoreBtn.accessibilityName = ResourceUtil.getInstance().getString('bbb.video.maximizeRestoreBtn.accessibilityName');
 					minimizeBtn.accessibilityName = ResourceUtil.getInstance().getString('bbb.video.minimizeBtn.accessibilityName');
 				}
-			}			
+			}
+			
+			private function setupCloseAllVideosButton():void {
+				if(options.enableCloseAllVideosButton == true) {
+					var button:CloseAllVideosButton = new CloseAllVideosButton();	   	
+					var event:ToolbarButtonEvent = new ToolbarButtonEvent(ToolbarButtonEvent.ADD);
+					event.button = button;
+					dispatcher.dispatchEvent(event);
+					
+					button.addEventListener(MouseEvent.CLICK, onCloseAllVideos);
+				}
+			}
+			
+			private function onCloseAllVideos (e:MouseEvent):void {
+				trace("close all videos");
+				
+				var videosToClose:Array = new Array();
+				
+				for each(var window:Object in mutableChildrenArray) {
+					if(window is VideoWindow)
+						videosToClose.push(window);
+				}
+				
+				videosToClose.forEach(function(element:*, index:int, arr:Array):void {
+					trace("closing window ");
+					(element as VideoWindow).close();
+				});
+				
+			}
 						
 		]]>
 	</mx:Script>

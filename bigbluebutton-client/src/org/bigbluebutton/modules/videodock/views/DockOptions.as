@@ -51,13 +51,19 @@ package org.bigbluebutton.modules.videodock.views
 		
 		[Bindable] public var baseTabIndex:int;
 		
+		[Bindable] public var enableCloseAllVideosButton:Boolean = false;
+		
+		
 		public function DockOptions()
 		{
 			var vxml:XML = BBB.getConfigForModule("VideodockModule");
 			if (vxml != null) {
-        if (vxml.@showControls != undefined) {
-          showControls = (vxml.@showControls.toString().toUpperCase() == "TRUE") ? true : false;
-        }
+				if (vxml.@enableCloseAllVideosButton != undefined) {
+					enableCloseAllVideosButton = (vxml.@enableCloseAllVideosButton.toString().toUpperCase() == "TRUE") ? true : false;
+				}
+				if (vxml.@showControls != undefined) {
+					showControls = (vxml.@showControls.toString().toUpperCase() == "TRUE") ? true : false;
+				}
 				if (vxml.@autoDock != undefined) {
 					autoDock = (vxml.@autoDock.toString().toUpperCase() == "TRUE") ? true : false;
 				}

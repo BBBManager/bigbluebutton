@@ -19,11 +19,13 @@ class BigBlueButtonInGW(bbbGW: BigBlueButtonGateway, presUtil: PreuploadedPresen
   // Meeting
   def createMeeting2(meetingID: String, externalMeetingID:String, meetingName: String, record: Boolean, 
           voiceBridge: String, duration: Long, autoStartRecording: Boolean, 
-          allowStartStopRecording: Boolean) {
+          allowStartStopRecording: Boolean, moderatorPass: String, viewerPass: String,
+          createTime: Long, createDate: String) {
 //    println("******************** CREATING MEETING [" + meetingID + "] ***************************** ")
   	bbbGW.accept(new CreateMeeting(meetingID, externalMeetingID, meetingName, record, 
 	                   voiceBridge, duration, autoStartRecording,
-	                   allowStartStopRecording))
+	                   allowStartStopRecording, moderatorPass, viewerPass,
+	                   createTime, createDate))
   }
   
   def destroyMeeting(meetingID: String) {
@@ -83,13 +85,15 @@ class BigBlueButtonInGW(bbbGW: BigBlueButtonGateway, presUtil: PreuploadedPresen
     val disablePubChat = s.getOrElse("disablePublicChat", false)
     val lockedLayout = s.getOrElse("lockedLayout", false)
     var lockOnJoin = s.getOrElse("lockOnJoin", false)
+    var lockOnJoinConfigurable = s.getOrElse("lockOnJoinConfigurable", false)
     
     val permissions = new Permissions(disableCam = disableCam,
                                       disableMic = disableMic,
                                       disablePrivChat = disablePrivChat,
                                       disablePubChat = disablePubChat,
                                       lockedLayout = lockedLayout,
-                                      lockOnJoin = lockOnJoin)
+                                      lockOnJoin = lockOnJoin,
+                                      lockOnJoinConfigurable = lockOnJoinConfigurable)
 
     bbbGW.accept(new SetLockSettings(meetingID, userId, permissions))
   }
@@ -106,12 +110,14 @@ class BigBlueButtonInGW(bbbGW: BigBlueButtonGateway, presUtil: PreuploadedPresen
     val disablePubChat = s.getOrElse("disablePublicChat", false)
     val lockedLayout = s.getOrElse("lockedLayout", false)
     val lockOnJoin = s.getOrElse("lockOnJoin", false)
+    val lockOnJoinConfigurable = s.getOrElse("lockOnJoinConfigurable", false)
     val permissions = new Permissions(disableCam = disableCam,
                                       disableMic = disableMic,
                                       disablePrivChat = disablePrivChat,
                                       disablePubChat = disablePubChat,
                                       lockedLayout = lockedLayout,
-                                      lockOnJoin = lockOnJoin)
+                                      lockOnJoin = lockOnJoin,
+                                      lockOnJoinConfigurable = lockOnJoinConfigurable)
 
     bbbGW.accept(new InitLockSettings(meetingID, permissions))
   }
